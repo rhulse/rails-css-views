@@ -5,8 +5,8 @@ class HandlerTest < Test::Unit::TestCase
     setup do
       @controller = stub_controller
       @controller.expects(:render_to_string).with("main").returns("FAKE_BODY").once
-      @configuration = CssProcessor::Configuration.new("test_config", :components=>["main"])
-      @handler = CssProcessor::Handler.new(@configuration, @controller)
+      @configuration = CssViews::Configuration.new("test_config", :components=>["main"])
+      @handler = CssViews::Handler.new(@configuration, @controller)
     end
     
     should "return the body unmodified when rendering" do
@@ -19,8 +19,8 @@ class HandlerTest < Test::Unit::TestCase
       @controller = stub_controller
       @controller.expects(:render_to_string).with("main").returns("FAKE_BODY").once
       @controller.expects(:render_to_string).with("admin").returns("ADMIN_BODY").once
-      @configuration = CssProcessor::Configuration.new("test_config", :components=>["main", "admin"])
-      @handler = CssProcessor::Handler.new(@configuration, @controller)
+      @configuration = CssViews::Configuration.new("test_config", :components=>["main", "admin"])
+      @handler = CssViews::Handler.new(@configuration, @controller)
     end
     
     should "return the concatenated body" do
@@ -34,8 +34,8 @@ class HandlerTest < Test::Unit::TestCase
       @controller = stub_controller
       @controller.expects(:render_to_string).with("main").returns("FAKE_BODY").once
       @controller.expects(:render_to_string).with("admin").returns("ADMIN_BODY").once
-      @configuration = CssProcessor::Configuration.new("test_config", :components=>["main", "admin"], :transformers=>[DownCaseTransformer.new])
-      @handler = CssProcessor::Handler.new(@configuration, @controller)
+      @configuration = CssViews::Configuration.new("test_config", :components=>["main", "admin"], :transformers=>[DownCaseTransformer.new])
+      @handler = CssViews::Handler.new(@configuration, @controller)
     end
     
     should "return the concatenated body after transformation" do

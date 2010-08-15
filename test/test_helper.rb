@@ -4,7 +4,7 @@ gem 'actionpack', '>= 3.0.0.rc'
 require 'active_support'
 require 'shoulda'
 require 'mocha'
-require 'css_processor'
+require 'css_views'
 
 
 class Test::Unit::TestCase

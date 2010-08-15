@@ -1,4 +1,4 @@
-module CssProcessor
+module CssViews
   module ControllerMixins
     extend ActiveSupport::Concern
     included do

@@ -1,4 +1,4 @@
-module CssProcessor
+module CssViews
   class Handler
     def initialize(configuration, controller)
       @configuration = configuration

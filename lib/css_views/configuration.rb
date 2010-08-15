@@ -1,4 +1,4 @@
-module CssProcessor
+module CssViews
   class Configuration
     def initialize(name, options)
       @name = name
