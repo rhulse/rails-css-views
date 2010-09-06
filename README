@@ -11,6 +11,25 @@ avoiding any post-deployment surprises.
 
 The Gem uses Rails internal APIs to minimise code and provide a terse interface.
 
+== Background
+
+The idea for this Gem came from DHH's RailsConf 2010 keynote:
+
+http://www.youtube.com/watch?v=b0iKYRKtAsA
+
+About 33 minutes in he talks about /public being a junk drawer and perhaps some of the
+stuff could be moved into app/, giving us huge benefits. Having CSS views (and javascript views)
+allows us to do other stuff with the contents of those files. 
+
+For example, smaller images included in the CSS could be turned into data urls inside the file 
+to save http requests. Minifiers/JS reduction can also me used.
+
+Patches are welcome, however keep in mind the aim of this gem: to be as simple as possible
+and cover the majority of use-cases. 
+
+Radio New Zealand funded this code for use on our internal (and public) projects
+and we are releasing it under a free software license.
+
 == Setup
 === Views
 
@@ -56,6 +75,18 @@ Each transformer must have a method called transform that takes and return a str
 If more than one is included, the CSS is transformed by each in the order specified.
 
 You can have as many css_configurations as you need.
+
+If you want to setup ruby variables to use in the CSS views, then use a before filter:
+
+  before_filter :set_vars
+
+and later in the stylsheet_controller
+
+  private
+  
+  def set_vars
+    # your stuff here
+  end
 
 === Route
 
