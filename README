@@ -1,0 +1,130 @@
+= CSS Views
+
+This gem is designed to provide CSS views to Rails, and a process to concatenate 
+and minify these files to one file for production.
+
+In development mode the specified css views also are processed and served as one file, but 
+the source can still be updated and the changes viewed without restarting the server.
+
+This allows you to see the full effect of the production packaging in development,
+avoiding any post-deployment surprises.
+
+The Gem uses Rails internal APIs to minimise code and provide a terse interface.
+
+== Setup
+=== Views
+
+Create a views folder and put your stylesheets in it:
+
+ + stylesheets
+      + reset.css.erb
+      + layout.css.erb
+      + branding.css.erb
+
+The CSS files can reference images (via image_tag), and expand out ruby variables that may be set elsewhere.
+
+This means that any images inside the CSS use whatever cache busting scheme you've specified in Rails.
+
+=== Controller
+
+(app/controllers/stylesheets.rb)
+
+The controller requires the Gem, and includes the module:
+
+  require 'css_views'
+
+  class StylesheetsController < ApplicationController
+    include CssViews::ControllerMixins
+
+    css_configuration 'application', :components => ['reset', 'layout', 'colors'], :transformers => [Minifier.new]
+  end
+
+The configuration takes:
+  1. The name you want to give the file in production (this is the :configutation_name in the route below)
+  2. An array of views in the order you want to combine them 
+  3. Optionally, an instance of a Class (or an Array of them) transform the assembled CSS views.
+  
+Each transformer must have a method called transform that takes and return a string
+
+  class Minifier
+    def transform(css)
+      do something here
+      return the result
+    end
+  end
+
+If more than one is included, the CSS is transformed by each in the order specified.
+
+You can have as many css_configurations as you need.
+
+=== Route
+
+The route in routes.rb can take two forms.
+
+1. The standard route:
+
+  match '/stylesheets/:configuration_name(.:format)' => "stylesheets#show", :as=>:packaged_stylesheet
+
+2. The cache-busting route:
+
+  match '/stylesheets/:cache_buster/:configuration_name(.:format)' => "stylesheets#show", :as=>:packaged_stylesheet
+
+This will allow an additional parameter that can be changed for each deployment. 
+
+When this param is set, the Gem sets the Expires and Public cache control headers for the first request made.
+It is up to you to set these header in your webserver's config to cater for subsequent requests.
+
+See asset_tag_helper.rb in the Rails source for more information on cache-busting and setting up Apache.
+
+NB: You can also do:
+
+  match '/stylesheets/:configuration_name-:cache_buster(.:format)' => "stylesheets#show", :as=>:packaged_stylesheet
+
+if you want the cache busting string embedded in the filename.
+
+===Application.html.erb
+
+The route provides a path helper - packaged_stylesheet_path.
+
+This: 
+
+  packaged_stylesheet_path(CacheBusterFunction, 'global', :css)
+
+generates a link to global.css which is handled by the show method.
+
+CacheBusterFunction is something that return a string to use as the cache buster
+
+Use this if you use the embedded route syntax:
+
+  packaged_stylesheet_path('global', CacheBusterFunction, :css)
+
+The rendered file is subject to normal rails caching rules:
+
+1. It is not cached in development, but uses etags so unless the source in the CSS views is modified the 
+browser will get a 304 back.
+
+2. Is cached in production after the first request.
+
+CacheBusterFunction could just return text. For example the current CSS version number.
+
+Using a version number would mean that the CSS file name stays the same across 
+deployments, which is more efficient than using mtime (clients would not have to download it needlessly). 
+Mtime is going to change with every deployment, even if the CSS content 
+does not change, because each deployment (via capistrano/svn/git uses new files each time (with new mtimes).
+
+NB: A rewrite rule is NOT required for the CSS file generated this way, as is needed with other cachebusting schemes. 
+
+You should set up far-future headers in Apache though.
+
+==Note on using Etags
+
+If you use the cache buster, you should set Etags on in Apache.
+
+To match the Rails method of calculation use this in Apache
+
+FileETag MTime
+
+(http://httpd.apache.org/docs/2.0/mod/core.html#fileetag)
+
+
+
