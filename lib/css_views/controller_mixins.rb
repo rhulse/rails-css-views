@@ -22,8 +22,8 @@ module CssViews
         if perform_caching
           fresh_when(:etag=>handler.etag, :last_modified=>handler.last_modified, :public=>true)
           if params[:cache_buster]
-            response.headers['Cache-Control']= 'public, max-age=131557600'
-            response.headers['Expires'] = 10.years.from_now.httpdate
+            response.headers['Cache-Control']= 'public, max-age=31557600'
+            response.headers['Expires'] = 1.year.from_now.httpdate
           end
           return if performed?
         end
