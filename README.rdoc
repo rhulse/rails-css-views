@@ -11,6 +11,10 @@ avoiding any post-deployment surprises.
 
 The Gem uses Rails internal APIs to minimise code and provide a terse interface.
 
+NB: While you can use Ruby (and Rails) constructs in your ccs.erb files, these 
+are evaluated ONCE ONLY on the first production request after deployment. 
+This means you cannot use dynamic variables in the ccs.erb files (e.g. for session based information)
+
 == Background
 
 The idea for this Gem came from DHH's RailsConf 2010 keynote:
