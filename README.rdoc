@@ -1,9 +1,9 @@
 = CSS Views
 
-This gem is designed to provide CSS views to Rails, and a process to concatenate 
+This gem is designed to provide CSS views to Rails, and a process to concatenate
 and minify these files to one file for production.
 
-In development mode the specified css views also are processed and served as one file, but 
+In development mode the specified css views also are processed and served as one file, but
 the source can still be updated and the changes viewed without restarting the server.
 
 This allows you to see the full effect of the production packaging in development,
@@ -11,10 +11,13 @@ avoiding any post-deployment surprises.
 
 The Gem uses Rails internal APIs to minimise code and provide a terse interface.
 
-NB: While you can use Ruby (and Rails) constructs in your css.erb files, these 
-are evaluated ONCE ONLY on the first production request after deployment. 
-This means you cannot use dynamic run-time variables in the css.erb files 
+NB: While you can use Ruby (and Rails) constructs in your css.erb files, these
+are evaluated ONCE ONLY on the first production request after deployment.
+This means you cannot use dynamic run-time variables in the css.erb files
 (e.g. for session based information)
+
+Also, this library only concatenates the resultant files.
+It does not minify, see
 
 == Background
 
@@ -24,13 +27,13 @@ http://www.youtube.com/watch?v=b0iKYRKtAsA
 
 About 33 minutes in he talks about /public being a junk drawer and perhaps some of the
 stuff could be moved into app/, giving us huge benefits. Having CSS views (and javascript views)
-allows us to do other stuff with the contents of those files. 
+allows us to do other stuff with the contents of those files.
 
-For example, smaller images included in the CSS could be turned into data urls inside the file 
+For example, smaller images included in the CSS could be turned into data urls inside the file
 to save http requests. Minifiers/JS reduction can also me used.
 
 Patches are welcome, however keep in mind the aim of this gem: to be as simple as possible
-and cover the majority of use-cases. 
+and cover the majority of use-cases.
 
 Radio New Zealand funded this code for use on our internal (and public) projects
 and we are releasing it under a free software license.
@@ -65,9 +68,9 @@ The controller requires the Gem, and includes the module:
 
 The configuration takes:
   1. The name you want to give the file in production (this is the :configutation_name in the route below)
-  2. An array of views in the order you want to combine them 
+  2. An array of views in the order you want to combine them
   3. Optionally, an instance of a Class (or an Array of them) transform the assembled CSS views.
-  
+
 Each transformer must have a method called transform that takes and return a string
 
   class Minifier
@@ -88,7 +91,7 @@ If you want to setup ruby variables to use in the CSS views, then use a before f
 and later in the stylsheet_controller
 
   private
-  
+
   def set_vars
     # your stuff here
   end
@@ -105,7 +108,7 @@ The route in routes.rb can take two forms.
 
   match '/stylesheets/:cache_buster/:configuration_name(.:format)' => "stylesheets#show", :as=>:packaged_stylesheet
 
-This will allow an additional parameter that can be changed for each deployment. 
+This will allow an additional parameter that can be changed for each deployment.
 
 When this param is set, the Gem sets the Expires and Public cache control headers for the first request made.
 It is up to you to set these header in your webserver's config to cater for subsequent requests.
@@ -122,7 +125,7 @@ if you want the cache busting string embedded in the filename.
 
 The route provides a path helper - packaged_stylesheet_path.
 
-This: 
+This:
 
   packaged_stylesheet_path(CacheBusterFunction, 'global', :css)
 
@@ -136,21 +139,53 @@ Use this if you use the embedded route syntax:
 
 The rendered file is subject to normal rails caching rules:
 
-1. It is not cached in development, but uses etags so unless the source in the CSS views is modified the 
+1. It is not cached in development, but uses etags so unless the source in the CSS views is modified the
 browser will get a 304 back.
 
 2. Is cached in production after the first request.
 
 CacheBusterFunction could just return text. For example the current CSS version number.
 
-Using a version number would mean that the CSS file name stays the same across 
-deployments, which is more efficient than using mtime (clients would not have to download it needlessly). 
-Mtime is going to change with every deployment, even if the CSS content 
+Using a version number would mean that the CSS file name stays the same across
+deployments, which is more efficient than using mtime (clients would not have to download it needlessly).
+Mtime is going to change with every deployment, even if the CSS content
 does not change, because each deployment (via capistrano/svn/git uses new files each time (with new mtimes).
 
-NB: A rewrite rule is NOT required for the CSS file generated this way, as is needed with other cachebusting schemes. 
+NB: A rewrite rule is NOT required for the CSS file generated this way, as is needed with other cachebusting schemes.
 
 You should set up far-future headers in Apache though.
+
+== Example Controller
+
+This is an example of the controller from radionz.co.nz
+
+The transformer class is a container for the css_toolkit yui_compressor function.
+
+This allows us to check in development that the minification does not break the sites design.
+
+  require 'css_views'
+  require 'css_toolkit'
+
+  class Transformer
+    include CssToolkit
+    def transform(css)
+      yui_compressor(css)
+    end
+  end
+
+  class StylesheetsController < ApplicationController
+    include CssViews::ControllerMixins
+
+    before_filter :set_vars
+
+    css_configuration "application", :components=>['global', 'application', 'print'],:transformers=>[Transformer.new]
+
+    private
+    def set_vars
+      @corp_black = '#310C04'
+    end
+  end
+
 
 ==Note on using Etags
 
