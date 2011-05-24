@@ -1,5 +1,10 @@
 = CSS Views
 
+NOTE: This code has been made redundant by the introduction of the asset pipeline in Rails 3.1
+This means that the code won't be maintained anymore, and will probably break sometime in the future. 
+
+:-(
+
 This gem is designed to provide CSS views to Rails, and a process to concatenate
 and minify these files to one file for production.
 
