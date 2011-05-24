@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
 
   s.description = %q{Allow you to create css.erb views, and use helpers and the like in them}
   s.summary     = %q{Simple Controller support}
-  s.homepage    = %q{http://https://github.com/rhulse/rails-css-views}
+  s.homepage    = %q{https://github.com/rhulse/rails-css-views}
 
   s.add_dependency('actionpack', '>= 3.0.0')
 
